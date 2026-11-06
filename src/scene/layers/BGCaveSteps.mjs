@@ -1,6 +1,17 @@
-/** BGCaveSteps layer. */
+/** BGCaveSteps layer: four equal-rise steps centred at 0.075w, sized from w only. */
 export default function BGCaveSteps(w, h, accent) {
-  const width = String(w);
-  const height = String(h);
-  return `<svg class="BGCaveSteps SVG" version="1.1" height="${height}" width="${width}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><rect class="BGCaveSteps__rectangle" x="${width * 0.05}" y="${height * 0.98}" width="${width * 0.05}" height="${width * 0.0125}" fill="#fff"></rect><rect class="BGCaveSteps__rectangle" x="${width * 0.05875}" y="${height * 0.9625}" width="${width * 0.035}" height="${width * 0.0085}" fill="#fff"></rect><rect class="BGCaveSteps__rectangle" x="${width * 0.0675}" y="${height * 0.947975}" width="${width * 0.0175}" height="${width * 0.006}" fill="#fff"></rect><rect class="BGCaveSteps__rectangle" x="${width * 0.0715}" y="${height * 0.9375}" width="${width * 0.01}" height="${width * 0.003}" fill="#fff"></rect></svg>`;
+  const f = (n) => Math.round(n * 100) / 100;
+  const r = w * 0.0095;
+  const B = w * 0.05;
+  const cx = w * 0.075;
+  const widths = [B, B * 0.7, B * 0.35, B * 0.2];
+  let rects = "";
+  for (let i = 0; i < 4; i++) {
+    const yTop = h - (i + 1) * r;
+    const yBottom = h - i * r;
+    const x = cx - widths[i] / 2;
+    rects += `<rect class="BGCaveSteps__rectangle" x="${f(x)}" y="${f(yBottom - 0.65 * r)}" width="${f(widths[i])}" height="${f(0.65 * r)}" fill="#8d8db4"></rect>`;
+    rects += `<rect class="BGCaveSteps__rectangle" x="${f(x)}" y="${f(yTop)}" width="${f(widths[i])}" height="${f(0.35 * r)}" fill="#fff"></rect>`;
+  }
+  return `<svg class="BGCaveSteps SVG" version="1.1" height="${h}" width="${w}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">${rects}</svg>`;
 }
