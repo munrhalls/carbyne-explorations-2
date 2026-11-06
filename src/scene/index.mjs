@@ -32,3 +32,28 @@ export const layers = {
   BGCircle,
   BGNavigationalRiverButtons,
 };
+
+/** Whole scene in old drawing order and nesting, as one markup string. */
+export function renderScene(w, h, accent, starsUrl) {
+  return (
+    BGanimStarDots(w, h, accent, starsUrl) +
+    BGblanket(w, h, accent) +
+    BGCaveLine(w, h, accent) +
+    BGClepsidreBridgeway(w, h, accent) +
+    BGCaveLineFill(w, h, accent) +
+    BGCaveSteps(w, h, accent) +
+    BGCaveDots(w, h, accent) +
+    BGTitleLayerLine(w, h, accent) +
+    BGblanketOutline(w, h, accent) +
+    '<div class="BGcontentContainer"></div>' +
+    AppTitle(w, h, accent) +
+    BGUpholderConnectorXer(w, h, accent) +
+    BGNavigationalAntennae(w, h, accent) +
+    BGNavigationalRiver(
+      w,
+      h,
+      accent,
+      BGCircle(w, h, accent) + BGNavigationalRiverButtons(w, h, accent),
+    )
+  );
+}
