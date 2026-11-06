@@ -143,5 +143,38 @@ async function main() {
   process.exit(bad ? 1 : 0);
 }
 
+/** Compare one named fixture layer against src/scene/layers/<Name>.mjs default export. */
+async function layerMode(name) {
+  const layer = fixture.layers.find((l) => l.name === name);
+  if (!layer) {
+    console.log(`D1 ${name}: no - not an old layer`);
+    process.exit(1);
+  }
+  const layerPath = join(root, "src/scene/layers", `${name}.mjs`);
+  if (!existsSync(layerPath)) {
+    console.log(`D1 ${name}: no - src/scene/layers/${name}.mjs is missing`);
+    process.exit(1);
+  }
+  let fn;
+  try {
+    ({ default: fn } = await import(pathToFileURL(layerPath).href));
+  } catch (e) {
+    console.log(`D1 ${name}: no - ${e.message}`);
+    process.exit(1);
+  }
+  let bad = 0;
+  for (const { w, h } of fixture.sizes) {
+    const key = `${w}x${h}`;
+    const out = typeof fn === "function" ? fn(w, h, fixture.accent) : null;
+    const diff = typeof out === "string" ? same(layer.markup[key], out) : "result not a string";
+    console.log(diff === null ? `ok  ${name} ${key}` : `NO  ${name} ${key}: ${diff}`);
+    if (diff !== null) bad++;
+  }
+  console.log(bad ? `D1 ${name}: no - ${bad} of ${fixture.sizes.length} sizes differ` : `D1 ${name}: yes`);
+  process.exit(bad ? 1 : 0);
+}
+
+const layerIdx = process.argv.indexOf("--layer");
 if (process.argv.includes("--selftest")) selftest();
+else if (layerIdx !== -1) layerMode(process.argv[layerIdx + 1]);
 else main();
