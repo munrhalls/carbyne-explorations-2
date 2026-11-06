@@ -55,7 +55,7 @@ function pageHtml(page, riverItems) {
 </head>
 <body>
   <div class="App">
-    <div id="scene" data-stars="${base}/stars.png" data-home="${base}/" data-accent="${esc(page.accent)}"></div>
+    <div id="scene" data-home="${base}/" data-accent="${esc(page.accent)}"></div>
     <main class="ContentManager">
       <div class="Category">
         <article class="Category__item">
