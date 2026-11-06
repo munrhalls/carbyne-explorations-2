@@ -10,7 +10,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const fixture = JSON.parse(readFileSync(join(root, "proofs/fixtures/old-art.json"), "utf8"));
 
 /** Layers refined on purpose (owner decision 2026-11-06): no longer compared to the old site. */
-const REFINED = new Set(["BGNavigationalRiverButtons"]);
+const REFINED = new Set(["BGNavigationalRiverButtons", "AppTitle"]);
 
 const NUM = /-?\d*\.?\d+(?:e[-+]?\d+)?/gi;
 const clip = (s) => (s.length > 100 ? s.slice(0, 100) : s);

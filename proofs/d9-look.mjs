@@ -8,6 +8,9 @@ import { makeSandbox, buildSite, removeSandbox } from "./harness.mjs";
 
 const SIZES = [[320, 640], [768, 1024], [1280, 800], [1920, 1080]];
 const MIN_LABEL_PX = 12;
+const MIN_BODY_PX = 16;
+const MIN_TITLE_PX = 20;
+const MIN_RIBBON_PX = 12;
 const TYPES = { ".html": "text/html", ".css": "text/css", ".mjs": "text/javascript", ".js": "text/javascript", ".png": "image/png", ".woff2": "font/woff2", ".svg": "image/svg+xml" };
 
 /** Runs inside the page: samples each label across its whole lap and reports what it saw. */
@@ -40,6 +43,65 @@ const MEASURE = `(() => {
   }
   for (const [l, n] of shown) if (n === 0) problems.push(l.textContent + ' never fully shown');
   return { labels: labels.length, minFont, problems };
+})()`;
+
+/** Runs inside the page: checks body, title and ribbon text sizes, ribbon fit, sideways scroll, the text-box border and clipping. */
+const MEASURE_TEXT = `(async () => {
+  await document.fonts.load('700 12px "Josefin Sans"');
+  await document.fonts.load('400 16px "Josefin Sans"');
+  await document.fonts.ready;
+  const problems = [];
+  const paras = [...document.querySelectorAll('.ContentManager p')];
+  if (!paras.length) problems.push('[body] no paragraph');
+  for (const p of paras) {
+    const fs = parseFloat(getComputedStyle(p).fontSize);
+    if (fs < ${MIN_BODY_PX}) problems.push('[body] paragraph font ' + fs + 'px < ' + ${MIN_BODY_PX} + 'px');
+  }
+  const h1 = document.querySelector('.ContentManager h1');
+  if (h1 && parseFloat(getComputedStyle(h1).fontSize) < ${MIN_TITLE_PX}) problems.push('[title] font ' + parseFloat(getComputedStyle(h1).fontSize) + 'px < ' + ${MIN_TITLE_PX} + 'px');
+  const texts = [...document.querySelectorAll('.AppTitle text')];
+  if (!texts.length) problems.push('[ribbon] no title text');
+  for (const text of texts) {
+    const fs = parseFloat(getComputedStyle(text).fontSize);
+    if (fs < ${MIN_RIBBON_PX}) problems.push('[ribbon] font ' + fs + 'px < ' + ${MIN_RIBBON_PX} + 'px: ' + text.textContent);
+    const m = document.querySelector('.BGCircle circle').getBoundingClientRect();
+    const cx = m.left + m.width / 2, cy = m.top + m.height / 2, r = m.width / 2;
+    const p = text.getStartPositionOfChar(0);
+    const left = p.x - 2, right = p.x + fs, top = p.y - fs, bottom = p.y + fs;
+    const nx = Math.max(left, Math.min(cx, right)), ny = Math.max(top, Math.min(cy, bottom));
+    const d = Math.hypot(cx - nx, cy - ny);
+    if (d < r + 5) problems.push('[moon] "' + text.textContent + '" starts ' + Math.round(d) + 'px from the moon centre, want ' + Math.round(r + 5));
+    const tp = text.querySelector('textPath');
+    if (tp) {
+      const path = document.getElementById(tp.href.baseVal.slice(1));
+      const len = text.getComputedTextLength();
+      if (len === 0) problems.push('[fit] computed length 0: ' + text.textContent);
+      else if (path && len > path.getTotalLength()) problems.push('[fit] ' + text.textContent + ' len ' + Math.round(len) + ' > path ' + Math.round(path.getTotalLength()));
+    }
+  }
+  if (document.documentElement.scrollWidth > innerWidth) problems.push('[scroll] scrollWidth ' + document.documentElement.scrollWidth + ' > innerWidth ' + innerWidth);
+  const item = document.querySelector('.Category__item');
+  if (item && getComputedStyle(item).borderRightWidth !== '0px') problems.push('[bar] right border ' + getComputedStyle(item).borderRightWidth);
+  const cm = document.querySelector('.ContentManager');
+  if (cm && (cm.scrollWidth > cm.clientWidth || cm.getBoundingClientRect().right > innerWidth + 0.5)) problems.push('[clip] ContentManager clipped: scrollWidth ' + cm.scrollWidth + ', clientWidth ' + cm.clientWidth + ', right ' + Math.round(cm.getBoundingClientRect().right) + ' vs ' + innerWidth);
+  for (const el of document.querySelectorAll('.ContentManager h1, .ContentManager h2, .ContentManager h3, .ContentManager p')) {
+    for (const node of el.childNodes) {
+      if (node.nodeType !== Node.TEXT_NODE) continue;
+      const re = /\\S+/g;
+      let m;
+      while ((m = re.exec(node.textContent))) {
+        const range = document.createRange();
+        range.setStart(node, m.index);
+        range.setEnd(node, m.index + m[0].length);
+        if (range.getClientRects().length > 1) problems.push('[break] "' + m[0] + '" is split over lines');
+      }
+    }
+  }
+  const moon = document.querySelector('.BGCircle');
+  for (const label of document.querySelectorAll('.RiverLabel')) {
+    if (!(label.compareDocumentPosition(moon) & Node.DOCUMENT_POSITION_FOLLOWING)) problems.push('[order] river labels are painted over the moon');
+  }
+  return { problems };
 })()`;
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -92,7 +154,7 @@ try {
     ws.send(JSON.stringify({ id, method, params }));
   });
   const evaluate = async (expression) => {
-    const r = await send("Runtime.evaluate", { expression, returnByValue: true });
+    const r = await send("Runtime.evaluate", { expression, returnByValue: true, awaitPromise: true });
     if (r.exceptionDetails) throw new Error(r.exceptionDetails.exception?.description || "evaluate failed");
     return r.result.value;
   };
@@ -111,9 +173,10 @@ try {
   for (const [w, h] of SIZES) {
     if (!(await open(w, h))) { console.log(`NO  ${w}x${h}: scene did not mount`); bad++; continue; }
     const r = await evaluate(MEASURE);
-    const problems = [...new Set(r.problems)];
+    const t = await evaluate(MEASURE_TEXT);
+    const problems = [...new Set([...r.problems, ...t.problems])];
     if (r.minFont < MIN_LABEL_PX) problems.push(`label font ${r.minFont}px < ${MIN_LABEL_PX}px`);
-    console.log(problems.length ? `NO  ${w}x${h}: ${problems.slice(0, 3).join("; ")}` : `ok  ${w}x${h}: ${r.labels} labels inside, font ${r.minFont}px`);
+    console.log(problems.length ? `NO  ${w}x${h}: ${problems.slice(0, 8).join("; ")}` : `ok  ${w}x${h}: ${r.labels} labels inside, font ${r.minFont}px`);
     if (problems.length) bad++;
   }
 
