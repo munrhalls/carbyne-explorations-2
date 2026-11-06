@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Carbyne admin</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: system-ui, sans-serif;
+    color: #222;
+    background: #f6f4ef;
+    display: flex;
+    min-height: 100vh;
+  }
+  nav {
+    width: 240px;
+    padding: 16px;
+    border-right: 1px solid #ddd;
+    background: #fff;
+    flex-shrink: 0;
+  }
+  nav h1 { font-size: 18px; margin: 0 0 12px; }
+  #new-page {
+    width: 100%;
+    margin-bottom: 12px;
+  }
+  #page-list button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 6px 8px;
+    margin-bottom: 4px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background: #fafafa;
+    cursor: pointer;
+  }
+  #page-list button.selected {
+    border-color: #567;
+    background: #e8eef4;
+  }
+  .pos {
+    display: inline-block;
+    min-width: 1.4em;
+    margin-right: 6px;
+    padding: 0 4px;
+    border-radius: 4px;
+    background: #567;
+    color: #fff;
+    font-size: 12px;
+    text-align: center;
+  }
+  main {
+    flex: 1;
+    padding: 24px;
+    max-width: 760px;
+  }
+  form label {
+    display: block;
+    font-weight: 600;
+    margin: 14px 0 4px;
+  }
+  input[type="text"], input[type="number"], textarea {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font: inherit;
+  }
+  textarea { font-family: ui-monospace, monospace; }
+  input[readonly], input:disabled, textarea:disabled {
+    background: #eee;
+    color: #666;
+  }
+  .accent-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  #swatch {
+    width: 28px;
+    height: 28px;
+    border: 1px solid #999;
+    border-radius: 6px;
+    flex-shrink: 0;
+  }
+  .buttons { margin-top: 18px; display: flex; gap: 8px; }
+  button {
+    padding: 7px 16px;
+    border: 1px solid #bbb;
+    border-radius: 6px;
+    background: #fff;
+    cursor: pointer;
+    font: inherit;
+  }
+  button:hover { background: #eee; }
+  #delete-btn { color: #a33; border-color: #c99; }
+  #status {
+    margin-top: 16px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    background: #eef3ee;
+    min-height: 1.2em;
+  }
+  #status.error { background: #f6e4e4; color: #a33; }
+  .upload-row { margin-top: 14px; }
+</style>
+</head>
+<body>
+<nav>
+  <h1>Pages</h1>
+  <button id="new-page" type="button">New page</button>
+  <div id="page-list"></div>
+</nav>
+<main>
+  <form id="editor">
+    <label for="slug">Slug</label>
+    <input type="text" id="slug" required>
+
+    <label for="label">Label</label>
+    <input type="text" id="label" required>
+
+    <label for="title">Title</label>
+    <input type="text" id="title" required>
+
+    <label for="accent">Accent</label>
+    <div class="accent-row">
+      <input type="text" id="accent">
+      <span id="swatch"></span>
+    </div>
+
+    <label for="position">Position</label>
+    <input type="number" id="position" min="1">
+
+    <label for="body">Body</label>
+    <textarea id="body" rows="22"></textarea>
+
+    <div class="buttons">
+      <button type="submit" id="save-btn">Save</button>
+      <button type="button" id="delete-btn">Delete</button>
+    </div>
+  </form>
+
+  <div class="upload-row">
+    <label for="image-file">Upload image</label>
+    <input type="file" id="image-file" accept="image/*">
+  </div>
+
+  <p id="status" role="status"></p>
+</main>
+
+<script>
+const WELCOME = "welcome";
+let pages = [];
+let current = null; // slug string of the loaded page, or null for a new page
+
+const $ = id => document.getElementById(id);
+const listEl = $("page-list");
+const statusEl = $("status");
+
+function setStatus(text, isError) {
+  statusEl.textContent = text || "";
+  statusEl.className = isError ? "error" : "";
+}
+
+async function api(path, options) {
+  const res = await fetch(path, options);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || res.statusText);
+  return data;
+}
+
+async function loadList() {
+  pages = await api("/api/pages");
+  listEl.innerHTML = "";
+  for (const p of pages) {
+    const b = document.createElement("button");
+    b.type = "button";
+    if (p.position != null) {
+      const s = document.createElement("span");
+      s.className = "pos";
+      s.textContent = p.position;
+      b.appendChild(s);
+    }
+    b.appendChild(document.createTextNode(p.label));
+    if (current === p.slug) b.classList.add("selected");
+    b.addEventListener("click", () => select(p.slug));
+    listEl.appendChild(b);
+  }
+}
+
+function fillForm(p) {
+  $("slug").value = p ? p.slug : "";
+  $("slug").readOnly = !!p;
+  $("label").value = p ? p.label : "";
+  $("title").value = p ? p.title : "";
+  $("accent").value = p ? (p.accent || "") : "";
+  $("position").value = p && p.position != null ? p.position : "";
+  $("body").value = p ? p.body : "";
+  const isWelcome = p && p.slug === WELCOME;
+  $("position").disabled = !!isWelcome;
+  $("delete-btn").hidden = !p || isWelcome;
+  updateSwatch();
+}
+
+function updateSwatch() {
+  $("swatch").style.background = $("accent").value || "transparent";
+}
+
+function select(slug) {
+  current = slug;
+  fillForm(pages.find(p => p.slug === slug));
+  loadListSelection();
+  setStatus("");
+}
+
+function loadListSelection() {
+  [...listEl.children].forEach((b, i) => {
+    b.classList.toggle("selected", pages[i] && pages[i].slug === current);
+  });
+}
+
+$("new-page").addEventListener("click", () => {
+  current = null;
+  fillForm(null);
+  loadListSelection();
+  setStatus("");
+});
+
+$("accent").addEventListener("input", updateSwatch);
+
+$("editor").addEventListener("submit", async e => {
+  e.preventDefault();
+  const slug = current || $("slug").value.trim();
+  const pos = $("position").value;
+  try {
+    await api("/api/pages/" + encodeURIComponent(slug), {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        label: $("label").value,
+        title: $("title").value,
+        body: $("body").value,
+        accent: $("accent").value,
+        position: pos === "" ? null : Number(pos)
+      })
+    });
+    await loadList();
+    select(slug);
+    setStatus("Saved");
+  } catch (err) {
+    setStatus(err.message, true);
+  }
+});
+
+$("delete-btn").addEventListener("click", async () => {
+  if (!current) return;
+  if (!confirm("Delete this page?")) return;
+  try {
+    await api("/api/pages/" + encodeURIComponent(current), { method: "DELETE" });
+    current = null;
+    fillForm(null);
+    setStatus("Deleted");
+    await loadList();
+  } catch (err) {
+    setStatus(err.message, true);
+  }
+});
+
+$("image-file").addEventListener("change", async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const name = file.name.toLowerCase().replace(/\s+/g, "-");
+  try {
+    const data = await api("/api/images?name=" + encodeURIComponent(name), {
+      method: "POST",
+      body: file
+    });
+    const ta = $("body");
+    const insert = "![](" + data.path + ")";
+    const start = ta.selectionStart, end = ta.selectionEnd;
+    ta.value = ta.value.slice(0, start) + insert + ta.value.slice(end);
+    ta.selectionStart = ta.selectionEnd = start + insert.length;
+    ta.focus();
+    setStatus("Uploaded " + data.path);
+  } catch (err) {
+    setStatus(err.message, true);
+  }
+  e.target.value = "";
+});
+
+(async () => {
+  try {
+    await loadList();
+    fillForm(null);
+  } catch (err) {
+    setStatus(err.message, true);
+  }
+})();
+</script>
+</body>
+</html>

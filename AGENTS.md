@@ -20,14 +20,14 @@ Owner checks: D5 adds a page with an image through the admin, pushes, sees it li
 - One table `pages` (slug, label, title, body, accent, position). Body is Markdown. `/` is the Welcome page, reached from the moon, not part of the river.
 - A page is in the river iff `position` is not NULL (unique, shown in ascending order). The Welcome page has slug `welcome`, no position, and is built to `/`; every river page is built to `/<slug>/`. Markdown bodies use root-relative URLs (`/img/x.png`, `/music/`); the build prefixes `BASE_PATH`.
 - SQLite file `content/blog.db`, read with `node:sqlite`. No npm dependencies. The one third-party file is `marked` (Markdown), vendored as `src/vendor/marked.mjs`; upgrade by replacing that file.
-- Admin is local only (127.0.0.1), no login, no secrets. It rejects any request whose Origin or Host is not itself.
+- Admin is local only (127.0.0.1), no login, no secrets: `node src/admin/server.mjs` (port 4321, or `PORT`). It rejects any request whose Host is not itself and any non-GET request whose Origin is not itself. It writes `content/blog.db` and saves images to `public/img/` (used in bodies as `/img/<name>`).
 - Plain ESM JavaScript with JSDoc. No TypeScript, no framework. Fonts are woff2 only.
 - Hosting: GitHub Pages, deployed by a GitHub Actions workflow that runs `node src/build.mjs`.
 - Every link and asset URL in `dist/` is prefixed with the env var `BASE_PATH` (empty by default). The Pages URL lives under `/carbyne-explorations-2`, so the workflow sets `BASE_PATH=/carbyne-explorations-2`; a custom domain later sets it empty.
 
 ## Hard limits
 
-- The only commands you may run: `node src/build.mjs` and `node proofs/<file>.mjs`. Never install, lint, type-check, run test frameworks, dev servers or browsers, and never contact external sites.
+- The only commands you may run: `node src/build.mjs` and `node proofs/<file>.mjs`. Never install, lint, type-check, run test frameworks, dev servers or browsers, and never contact external sites. The proofs D3 and D4 start the admin themselves, on a temporary copy of the repo, and stop it; you never start it by hand.
 - Never add a dependency, folder or root file that is not listed under Homes. If a task needs one, STOP and say so.
 - Executors never commit, push, branch, open or merge PRs. The runner does; the owner merges.
 - Delete files with `git rm`, never `rm`.
