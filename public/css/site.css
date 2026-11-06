@@ -133,6 +133,7 @@ table {
     letter-spacing: 3px;
     position: absolute;
     z-index: 9;
+    pointer-events: none; /* the title is not a control; it sits above the river and would swallow label hovers and clicks */
 }
 
 .AppTitle__textOne {
@@ -197,44 +198,59 @@ table {
     align-items: stretch;
 }
 
-/* BGNavigationalRiverButton */
-.BGNavigationalRiverButton {
-    font-size: 1rem;
-    color: #fff;
-    
+/* River labels */
+@keyframes RiverDrift {
+    0% { offset-distance: 0%; opacity: 0; }
+    16% { opacity: 1; }
+    88% { opacity: 1; }
+    100% { offset-distance: 100%; opacity: 0; }
+}
+
+.RiverLabel {
+    animation-name: RiverDrift;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    offset-rotate: 0deg;
     cursor: pointer;
-    border: 1px solid #fff;
-    z-index: 9;
-    
-}
-.BGNavigationalRiverButton__text_textPath {
-    font-size: 1.5rem;
-    font-weight: bold;
 }
 
-.BGNavigationalRiverButton__text:hover {
-    filter: drop-shadow(0px 12px 12px rgba(255, 255, 255, 1));
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 1.75rem;
+.RiverLabel circle {
+    fill: var(--c);
+    stroke: #fff;
+    stroke-width: 1px;
 }
 
-.BGNavigationalRiverButton__text_textPath2 {
-    font-size: 2rem;
-    font-weight: bold;
+.RiverLabel text {
+    font-size: 15px;
+    letter-spacing: 0.05em;
+    fill: #fff;
+    paint-order: stroke;
+    stroke: #000;
+    stroke-width: 3px;
+    stroke-linejoin: round;
 }
 
-.BGNavigationalRiverButton__text:hover .BGNavigationalRiverButton__text_textPath2 {
-    filter: drop-shadow(0px 12px 12px rgba(255, 255, 255, 1));
-    cursor: pointer;
-    font-weight: bold;
-    font-size: 2.75rem;
-}
-.BGNavigationalRiverButton__text {
+.RiverLabel--active text {
+    font-weight: 700;
 }
 
-.BGNavigationalRiverButton__text__tspan {
-    border: 1px solid #fff;
+a:hover .RiverLabel,
+a:focus-visible .RiverLabel {
+    animation-play-state: paused;
+}
+
+a:hover .RiverLabel text,
+a:focus-visible .RiverLabel text {
+    text-decoration: underline;
+    text-decoration-color: var(--c);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 4px;
+}
+
+@media screen and (max-width: 600px) {
+    .RiverLabel text {
+        font-size: 14px;
+    }
 }
 
 /* Josefin Sans fonts */

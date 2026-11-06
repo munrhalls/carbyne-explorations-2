@@ -1,0 +1,156 @@
+/** Proof D9: in a real browser, every river label stays inside the screen, keeps its natural glyph width and is readable. */
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import http from "node:http";
+import { spawn } from "node:child_process";
+import { makeSandbox, buildSite, removeSandbox } from "./harness.mjs";
+
+const SIZES = [[320, 640], [768, 1024], [1280, 800], [1920, 1080]];
+const MIN_LABEL_PX = 12;
+const TYPES = { ".html": "text/html", ".css": "text/css", ".mjs": "text/javascript", ".js": "text/javascript", ".png": "image/png", ".woff2": "font/woff2", ".svg": "image/svg+xml" };
+
+/** Runs inside the page: samples each label across its whole lap and reports what it saw. */
+const MEASURE = `(() => {
+  const vw = innerWidth, vh = innerHeight;
+  const labels = [...document.querySelectorAll('.RiverLabel')];
+  const navCount = document.querySelectorAll('nav.river a').length;
+  const anims = document.getAnimations().filter((a) => a.effect && a.effect.target && a.effect.target.classList && a.effect.target.classList.contains('RiverLabel'));
+  const problems = [];
+  if (labels.length !== navCount) problems.push('labels ' + labels.length + ' but nav links ' + navCount);
+  if (anims.length !== labels.length) problems.push(anims.length + ' animations for ' + labels.length + ' labels');
+  let minFont = Infinity;
+  for (const l of labels) {
+    const t = l.querySelector('text');
+    minFont = Math.min(minFont, parseFloat(getComputedStyle(t).fontSize));
+    if (t.hasAttribute('textLength') || t.hasAttribute('lengthAdjust')) problems.push('squeezed: ' + t.textContent);
+  }
+  const shown = new Map(labels.map((l) => [l, 0]));
+  const STEPS = 80;
+  for (const a of anims) a.pause();
+  for (let k = 0; k < STEPS; k++) {
+    for (const a of anims) a.currentTime = (k / STEPS) * a.effect.getTiming().duration;
+    for (const l of labels) {
+      if (+getComputedStyle(l).opacity < 0.99) continue;
+      shown.set(l, shown.get(l) + 1);
+      const r = l.getBoundingClientRect();
+      if (r.left < 0 || r.top < 0 || r.right > vw || r.bottom > vh)
+        problems.push(l.textContent + ' outside at step ' + k + ': ' + [r.left, r.top, r.right, r.bottom].map(Math.round).join(','));
+    }
+  }
+  for (const [l, n] of shown) if (n === 0) problems.push(l.textContent + ' never fully shown');
+  return { labels: labels.length, minFont, problems };
+})()`;
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+const sandbox = makeSandbox();
+const profile = fs.mkdtempSync(path.join(os.tmpdir(), "carbyne-chrome-"));
+let server, chrome, ws;
+let bad = 0;
+try {
+  buildSite(sandbox);
+  const dist = path.join(sandbox, "dist");
+  server = http.createServer((req, res) => {
+    let p = decodeURIComponent(new URL(req.url, "http://x").pathname);
+    if (!p.startsWith("/x/")) return void res.writeHead(404).end();
+    p = p.slice(2);
+    if (p.endsWith("/")) p += "index.html";
+    const file = path.join(dist, p);
+    if (!file.startsWith(dist) || !fs.existsSync(file)) return void res.writeHead(404).end();
+    res.writeHead(200, { "Content-Type": TYPES[path.extname(file)] || "application/octet-stream" }).end(fs.readFileSync(file));
+  });
+  await new Promise((r) => server.listen(0, "127.0.0.1", r));
+  const port = server.address().port;
+
+  chrome = spawn("google-chrome", ["--headless=new", "--no-sandbox", "--disable-gpu", "--remote-debugging-port=0", `--user-data-dir=${profile}`, "about:blank"], { stdio: ["ignore", "ignore", "pipe"] });
+  const debugPort = await new Promise((resolve, reject) => {
+    let buf = "";
+    const timer = setTimeout(() => reject(new Error("chrome did not start in 10s")), 10000);
+    chrome.stderr.on("data", (c) => {
+      buf += c;
+      const m = buf.match(/ws:\/\/127\.0\.0\.1:(\d+)\//);
+      if (m) { clearTimeout(timer); resolve(Number(m[1])); }
+    });
+    chrome.on("exit", () => reject(new Error("chrome exited early")));
+  });
+  const targets = await (await fetch(`http://127.0.0.1:${debugPort}/json`)).json();
+  ws = new WebSocket(targets.find((t) => t.type === "page").webSocketDebuggerUrl);
+  await new Promise((r) => ws.addEventListener("open", r, { once: true }));
+  let nextId = 0;
+  const pending = new Map();
+  ws.addEventListener("message", (e) => {
+    const m = JSON.parse(e.data);
+    const p = pending.get(m.id);
+    if (!p) return;
+    pending.delete(m.id);
+    if (m.error) p.rej(new Error(m.error.message)); else p.res(m.result);
+  });
+  const send = (method, params = {}) => new Promise((res, rej) => {
+    const id = ++nextId;
+    pending.set(id, { res, rej });
+    ws.send(JSON.stringify({ id, method, params }));
+  });
+  const evaluate = async (expression) => {
+    const r = await send("Runtime.evaluate", { expression, returnByValue: true });
+    if (r.exceptionDetails) throw new Error(r.exceptionDetails.exception?.description || "evaluate failed");
+    return r.result.value;
+  };
+
+  /** Opens the home page at a screen size; true once the scene has mounted. */
+  const open = async (w, h) => {
+    await send("Emulation.setDeviceMetricsOverride", { width: w, height: h, deviceScaleFactor: 1, mobile: false });
+    await send("Page.navigate", { url: `http://127.0.0.1:${port}/x/` });
+    for (let i = 0; i < 100; i++) {
+      await sleep(50);
+      if (await evaluate("document.documentElement.classList.contains('has-scene')").catch(() => false)) return true;
+    }
+    return false;
+  };
+
+  for (const [w, h] of SIZES) {
+    if (!(await open(w, h))) { console.log(`NO  ${w}x${h}: scene did not mount`); bad++; continue; }
+    const r = await evaluate(MEASURE);
+    const problems = [...new Set(r.problems)];
+    if (r.minFont < MIN_LABEL_PX) problems.push(`label font ${r.minFont}px < ${MIN_LABEL_PX}px`);
+    console.log(problems.length ? `NO  ${w}x${h}: ${problems.slice(0, 3).join("; ")}` : `ok  ${w}x${h}: ${r.labels} labels inside, font ${r.minFont}px`);
+    if (problems.length) bad++;
+  }
+
+  // Hover: the label under the pointer stops drifting, the others keep going.
+  if (!(await open(1280, 800))) { console.log("NO  hover: scene did not mount"); bad++; }
+  else {
+    const spot = await evaluate(`(() => {
+      for (const l of document.querySelectorAll('.RiverLabel')) {
+        if (+getComputedStyle(l).opacity < 0.99) continue;
+        const r = l.querySelector('text').getBoundingClientRect();
+        return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+      }
+      return null;
+    })()`);
+    if (!spot) { console.log("NO  hover: no fully visible label to point at"); bad++; }
+    else {
+      await send("Input.dispatchMouseEvent", { type: "mouseMoved", x: spot.x, y: spot.y });
+      await sleep(100);
+      const states = await evaluate("[...document.querySelectorAll('.RiverLabel')].map((l) => getComputedStyle(l).animationPlayState)");
+      const paused = states.filter((s) => s === "paused").length;
+      const hit = await evaluate(`(() => { const e = document.elementFromPoint(${spot.x}, ${spot.y}); return e ? e.tagName + '.' + (e.getAttribute('class') || '') : 'nothing'; })()`);
+      console.log(paused === 1 ? `ok  hover: 1 of ${states.length} labels paused` : `NO  hover: ${paused} of ${states.length} labels paused, want 1 (pointer at ${Math.round(spot.x)},${Math.round(spot.y)} is over ${hit})`);
+      if (paused !== 1) bad++;
+    }
+  }
+} catch (e) {
+  console.log(`D9: no - ${e.message}`);
+  bad++;
+} finally {
+  try { ws?.close(); } catch {}
+  if (chrome && chrome.exitCode === null) {
+    chrome.kill("SIGKILL");
+    await new Promise((r) => chrome.once("exit", r));
+  }
+  server?.close();
+  removeSandbox(sandbox);
+  fs.rmSync(profile, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 });
+}
+console.log(bad ? "D9: no" : "D9: yes");
+process.exit(bad ? 1 : 0);
