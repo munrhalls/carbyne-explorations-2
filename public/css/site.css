@@ -341,6 +341,75 @@ a:focus-visible .RiverLabel text {
 
 .Category__item img {
   max-width: 100%;
+  height: auto;
+}
+
+/* markdown */
+.Category__item > * {
+    max-width: 100%;
+    min-width: 0;
+}
+.Category__item strong,
+.Category__item b {
+    font-weight: 700;
+}
+.Category__item em,
+.Category__item i {
+    font-style: italic;
+}
+.Category__item ul,
+.Category__item ol {
+    align-self: stretch;
+    margin: 1rem 0;
+    padding-left: 1.5rem;
+}
+.Category__item ul { list-style: disc; }
+.Category__item ol { list-style: decimal; }
+.Category__item ul ul,
+.Category__item ol ol,
+.Category__item ul ol,
+.Category__item ol ul {
+    margin: 0.25rem 0;
+}
+.Category__item ul ul { list-style: circle; }
+.Category__item li {
+    margin: 0.25rem 0;
+}
+.Category__item blockquote {
+    align-self: stretch;
+    margin: 1rem 0;
+    padding: 0 0 0 1rem;
+    border-left: 3px solid #111;
+    font-style: italic;
+}
+.Category__item code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.9em;
+    background: #f1f2f8;
+    padding: 0.1em 0.35em;
+    border-radius: 3px;
+}
+.Category__item pre {
+    align-self: stretch;
+    margin: 1rem 0;
+    padding: 0.75rem 1rem;
+    background: #f1f2f8;
+    border-radius: 3px;
+    overflow-x: auto;
+    white-space: pre;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+.Category__item pre code {
+    background: none;
+    padding: 0;
+}
+.Category__item hr {
+    align-self: stretch;
+    width: 100%;
+    margin: 1.5rem 0;
+    border: 0;
+    border-top: 1px solid #111;
+    opacity: 0.25;
 }
 
 nav.river {
