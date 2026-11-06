@@ -15,7 +15,7 @@ function draw() {
   app.style.width = `${w}px`;
   app.style.height = `${h}px`;
   const phase = (Date.now() / 1000) % 360;
-  scene.innerHTML = renderScene(w, h, scene.dataset.accent ?? "", { starsUrl: scene.dataset.stars, items, active, home: scene.dataset.home, phase });
+  scene.innerHTML = renderScene(w, h, scene.dataset.accent ?? "", { items, active, home: scene.dataset.home, phase });
 }
 
 draw();
