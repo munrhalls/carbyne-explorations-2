@@ -223,6 +223,10 @@ a:focus-visible .RiverLabel text {
     .RiverLabel text {
         font-size: 14px;
     }
+    .Category__item h1 {
+        font-size: 20px;
+        letter-spacing: 0.04em;
+    }
 }
 
 /* Josefin Sans fonts */
@@ -293,6 +297,7 @@ a:focus-visible .RiverLabel text {
     letter-spacing: 0.08em;
     max-width: 30rem;
     white-space: pre-wrap;
+    overflow-wrap: normal;
 }
 
 .Category__item h2 {
@@ -306,8 +311,9 @@ a:focus-visible .RiverLabel text {
     letter-spacing: 0.08em;
     max-width: 30rem;
     white-space: pre-wrap;
+    overflow-wrap: normal;
 }
-.Category__item h3 { 
+.Category__item h3 {
     font-weight: bold;
     max-width: 30rem;
     margin-top: 1rem;

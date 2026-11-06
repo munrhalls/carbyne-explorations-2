@@ -53,15 +53,14 @@ export function renderScene(w, h, accent, opts = {}) {
       w,
       h,
       accent,
-      BGCircle(w, h, accent, opts.home) +
-        BGNavigationalRiverButtons(
-          w,
-          h,
-          accent,
-          opts.items,
-          opts.active,
-          opts.phase,
-        ),
+      BGNavigationalRiverButtons(
+        w,
+        h,
+        accent,
+        opts.items,
+        opts.active,
+        opts.phase,
+      ) + BGCircle(w, h, accent, opts.home),
     )
   );
 }
