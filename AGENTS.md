@@ -10,7 +10,8 @@ Scripts in `proofs/`, dependency-free, run as `node proofs/<file>.mjs`, exit 0 =
 - D2 site (`d2-site.mjs`): `dist/` has `/` and one page per row; the river has as many links as rows; the moon links to `/`; every link and image path resolves; an unknown path is not built.
 - D3 admin (`d3-admin.mjs`): on a temp copy of the DB, create, update, delete of a page and an image upload show up, change and disappear in the built site; the row is visible by `SELECT`.
 - D4 origin (`d4-origin.mjs`): the admin refuses a write whose Origin is foreign.
-- D9 look (`d9-look.mjs`): in headless Chrome at 320x640, 768x1024, 1280x800 and 1920x1080, every river label is fully inside the screen whenever it is fully opaque, keeps its natural glyph width and is at least 12px.
+- D9 look (`d9-look.mjs`): in headless Chrome at 320x640, 768x1024, 1280x800 and 1920x1080, every river label is fully inside the screen whenever it is fully opaque, keeps its natural glyph width and is at least 12px. It also checks the text (body at least 16px, title texts at least 12px and fitting their path, no sideways scroll, no split words, title clear of the moon, moon painted over the labels) and, on a real screenshot, that the cave window is dark navy with stars in it.
+- D10 stars (`d10-stars.mjs`, node only): the star layer is generated (no image), keeps its footprint, has three depth groups, loops seamlessly, keeps every star inside the footprint and sits on a navy gradient.
 
 Owner checks: D5 adds a page with an image through the admin, pushes, sees it live. D6 the art keeps the old silhouette (slab, sweep, outline, moon, title ribbon) on desktop and phone; layers in `REFINED` are refined on purpose. D7 on the phone, reach and read a page through the river. D8 hosting dashboards show Free, no card, $0.
 
