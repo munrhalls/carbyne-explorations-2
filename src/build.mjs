@@ -43,7 +43,7 @@ function pageHtml(page, riverItems) {
     ? 'Carbyne Explorations'
     : `${esc(page.title)} - Carbyne Explorations`;
   const links = riverItems
-    .map((item) => `    <a href="${base}/${item.slug}/">${esc(item.label)}</a>`)
+    .map((item) => `    <a href="${base}/${item.slug}/" data-color="${esc(item.accent)}"${item.slug === page.slug ? ' aria-current="page"' : ''}>${esc(item.label)}</a>`)
     .join('\n');
   return `<!doctype html>
 <html lang="en">
@@ -55,7 +55,7 @@ function pageHtml(page, riverItems) {
 </head>
 <body>
   <div class="App">
-    <div id="scene" data-stars="${base}/stars.png" data-accent="${esc(page.accent)}"></div>
+    <div id="scene" data-stars="${base}/stars.png" data-home="${base}/" data-accent="${esc(page.accent)}"></div>
     <main class="ContentManager">
       <div class="Category">
         <article class="Category__item">
