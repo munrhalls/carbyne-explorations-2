@@ -6,12 +6,13 @@ Scope: a public static blog. The original SVG art scene with a river menu of own
 
 Scripts in `proofs/`, dependency-free, run as `node proofs/<file>.mjs`, exit 0 = yes:
 
-- D1 art (`d1-art.mjs`): every old layer's markup at 320x640, 768x1024 and 1280x800 (`proofs/fixtures/old-art.json`) equals the new scene function's output.
+- D1 art (`d1-art.mjs`): every old layer's markup at 320x640, 768x1024 and 1280x800 (`proofs/fixtures/old-art.json`) equals the new scene function's output, except the layers named in `REFINED` in the script (refined on purpose, owner decision 2026-11-06). While any layer is refined the whole-scene comparison is skipped.
 - D2 site (`d2-site.mjs`): `dist/` has `/` and one page per row; the river has as many links as rows; the moon links to `/`; every link and image path resolves; an unknown path is not built.
 - D3 admin (`d3-admin.mjs`): on a temp copy of the DB, create, update, delete of a page and an image upload show up, change and disappear in the built site; the row is visible by `SELECT`.
 - D4 origin (`d4-origin.mjs`): the admin refuses a write whose Origin is foreign.
+- D9 look (`d9-look.mjs`): in headless Chrome at 320x640, 768x1024, 1280x800 and 1920x1080, every river label is fully inside the screen whenever it is fully opaque, keeps its natural glyph width and is at least 12px.
 
-Owner checks: D5 adds a page with an image through the admin, pushes, sees it live. D6 art looks the same as the old site on desktop and phone. D7 on the phone, reach and read a page through the river. D8 hosting dashboards show Free, no card, $0.
+Owner checks: D5 adds a page with an image through the admin, pushes, sees it live. D6 the art keeps the old silhouette (slab, sweep, outline, moon, title ribbon) on desktop and phone; layers in `REFINED` are refined on purpose. D7 on the phone, reach and read a page through the river. D8 hosting dashboards show Free, no card, $0.
 
 ## Binding decisions
 
@@ -27,7 +28,7 @@ Owner checks: D5 adds a page with an image through the admin, pushes, sees it li
 
 ## Hard limits
 
-- The only commands you may run: `node src/build.mjs` and `node proofs/<file>.mjs`. Never install, lint, type-check, run test frameworks, dev servers or browsers, and never contact external sites. The proofs D3 and D4 start the admin themselves, on a temporary copy of the repo, and stop it; you never start it by hand.
+- The only commands you may run: `node src/build.mjs` and `node proofs/<file>.mjs`. Never install, lint, type-check, run test frameworks or dev servers, and never contact external sites. A browser runs only inside `proofs/d9-look.mjs` (headless, on the temporary copy) or when the owner asks for one. The proofs D3 and D4 start the admin themselves, on a temporary copy of the repo, and stop it; you never start it by hand.
 - Never add a dependency, folder or root file that is not listed under Homes. If a task needs one, STOP and say so.
 - Executors never commit, push, branch, open or merge PRs. The runner does; the owner merges.
 - Delete files with `git rm`, never `rm`.
