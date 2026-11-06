@@ -6,7 +6,7 @@ Scope: a public static blog. The original SVG art scene with a river menu of own
 
 Scripts in `proofs/`, dependency-free, run as `node proofs/<file>.mjs`, exit 0 = yes:
 
-- D1 art (`d1-art.mjs`): every old layer's markup at 320x640, 768x1024 and 1280x800 (`proofs/fixtures/old-art.json`) equals the new scene function's output, except the layers named in `REFINED` in the script (refined on purpose, owner decision 2026-11-06). While any layer is refined the whole-scene comparison is skipped.
+- D1 art (`d1-art.mjs`): every old layer's markup at 320x640, 768x1024 and 1280x800 (`proofs/fixtures/old-art.json`) equals the new scene function's output, except the layers named in `REFINED` in the script (`BGNavigationalRiverButtons`, `AppTitle`, `BGanimStarDots`, `BGCaveSteps`, `BGCaveLineFill`) (refined on purpose, owner decision 2026-11-06). While any layer is refined the whole-scene comparison is skipped.
 - D2 site (`d2-site.mjs`): `dist/` has `/` and one page per row; the river has as many links as rows; the moon links to `/`; every link and image path resolves; an unknown path is not built. `dist/404.html` is a full page of the scene, and every page has the moon as its tab icon.
 - D3 admin (`d3-admin.mjs`): on a temp copy of the DB, create, update, delete of a page and an image upload show up, change and disappear in the built site; the row is visible by `SELECT`.
 - D4 origin (`d4-origin.mjs`): the admin refuses a write whose Origin is foreign.
@@ -14,12 +14,13 @@ Scripts in `proofs/`, dependency-free, run as `node proofs/<file>.mjs`, exit 0 =
 - D10 stars (`d10-stars.mjs`, node only): the star layer is generated (no image), keeps its footprint, has three depth groups, loops seamlessly, keeps every star inside the footprint and sits on a navy gradient.
 - D11 cave (`d11-cave.mjs`, node only): the four stairs (top face plus riser) lie inside the screen, touch, stand on the bottom edge, are centred, keep one shape at every size and use two fills; the cave mouth is a lamp-lit radial gradient with its old outline.
 - D12 accents (`d12-accents.mjs`, node only): every river accent is a `#rrggbb` hex, has a contrast of at least 4.5:1 against black and a hue at least 40 degrees from every other river accent.
+- D13 clean (`d13-clean.mjs`, node only): every class and id selector in `site.css` is used by the markup, there is no empty rule block, every refined layer and every proof file is named in this file.
 
 Owner checks: D5 adds a page with an image through the admin, pushes, sees it live. D6 the art keeps the old silhouette (slab, sweep, outline, moon, title ribbon) on desktop and phone; layers in `REFINED` are refined on purpose. D7 on the phone, reach and read a page through the river. D8 hosting dashboards show Free, no card, $0.
 
 ## Binding decisions
 
-- Art = pure functions `(w, h, accent) -> SVG markup string`, ported verbatim from the old repo's `SVG.js` layers. One resize listener for the whole scene. No `viewBox` scaling: a non-uniform one would stretch circles and text.
+- Art = pure functions `(w, h, accent) -> SVG markup string`, ported from the old repo's `SVG.js` layers; the layers named in `REFINED` in `proofs/d1-art.mjs` (`BGNavigationalRiverButtons`, `AppTitle`, `BGanimStarDots`, `BGCaveSteps`, `BGCaveLineFill`) are refined on purpose, all others are still the old markup. One resize listener for the whole scene. No `viewBox` scaling: a non-uniform one would stretch circles and text.
 - Page text is static HTML and readable without JS. Every river item is a real `<a href>` in the HTML.
 - One table `pages` (slug, label, title, body, accent, position). Body is Markdown. `/` is the Welcome page, reached from the moon, not part of the river.
 - A page is in the river iff `position` is not NULL (unique, shown in ascending order). The Welcome page has slug `welcome`, no position, and is built to `/`; every river page is built to `/<slug>/`. Markdown bodies use root-relative URLs (`/img/x.png`, `/music/`); the build prefixes `BASE_PATH`.
