@@ -247,10 +247,9 @@ $("editor").addEventListener("submit", async e => {
         position: pos === "" ? null : Number(pos)
       })
     });
-    current = slug;
-    $("slug").readOnly = true;
-    setStatus("Saved");
     await loadList();
+    select(slug);
+    setStatus("Saved");
   } catch (err) {
     setStatus(err.message, true);
   }
