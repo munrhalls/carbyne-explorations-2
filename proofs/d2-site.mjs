@@ -139,6 +139,43 @@ const expectedRiver = river.map((r) => `${BASE}/${r.slug}/`);
   checks.push(['page hooks', problems]);
 }
 
+{
+  const problems = [];
+  const file = path.join(dist, '404.html');
+  if (!fs.existsSync(file)) problems.push('404.html is missing');
+  else {
+    const html = fs.readFileSync(file, 'utf8');
+    if (!html.includes('<title>Not found - Carbyne Explorations</title>')) problems.push('title');
+    if (!html.includes('<h1>Not found</h1>')) problems.push('h1');
+    const sceneTag = html.match(/<div id="scene"[^>]*>/)?.[0] ?? '';
+    if (!sceneTag.includes(`data-home="${BASE}/"`)) problems.push('data-home');
+    const nav = html.split('<nav class="river"')[1]?.split('</nav>')[0] ?? '';
+    const hrefs = [...nav.matchAll(/href="([^"]*)"/g)].map((m) => m[1]);
+    if (hrefs.join('') !== expectedRiver.join('')) problems.push(`river: got ${hrefs.join(', ')}`);
+    if (html.includes('aria-current')) problems.push('aria-current present');
+    for (const m of html.matchAll(/(?:href|src)="([^"]*)"/g)) {
+      const v = m[1];
+      if (/^(https?:|\/\/|mailto:|data:|#)/.test(v)) continue;
+      if (!v.startsWith(`${BASE}/`)) { problems.push(`not prefixed: ${v}`); continue; }
+      let p = v.slice(BASE.length).split(/[?#]/)[0];
+      if (p.endsWith('/')) p += 'index.html';
+      if (!fs.existsSync(path.join(dist, p))) problems.push(`dead: ${v}`);
+    }
+  }
+  checks.push(['404 page', problems]);
+}
+
+{
+  const problems = [];
+  const targets = new Map(pages);
+  const file404 = path.join(dist, '404.html');
+  if (fs.existsSync(file404)) targets.set('404.html', fs.readFileSync(file404, 'utf8'));
+  for (const [url, html] of targets) {
+    if (!html.includes('<link rel="icon" href="data:image/svg+xml,')) problems.push(url);
+  }
+  checks.push(['icon', problems]);
+}
+
 let failed = 0;
 for (const [name, problems] of checks) {
   if (problems.length) { failed++; console.log(`NO  ${name}: ${problems.slice(0, 3).join('; ')}`); }
