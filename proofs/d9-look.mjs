@@ -4,6 +4,7 @@ import os from "node:os";
 import path from "node:path";
 import http from "node:http";
 import { spawn } from "node:child_process";
+import { DatabaseSync } from "node:sqlite";
 import { makeSandbox, buildSite, removeSandbox } from "./harness.mjs";
 
 const SIZES = [[320, 640], [768, 1024], [1280, 800], [1920, 1080]];
@@ -104,9 +105,73 @@ const MEASURE_TEXT = `(async () => {
   return { problems };
 })()`;
 
+/** Runs inside the page: checks the rich Markdown body on the first river page is styled and laid out sanely. */
+const MEASURE_MD = `(() => {
+  const problems = [];
+  const item = document.querySelector('.Category__item');
+  if (!item) return { problems: ['[md] no .Category__item'] };
+  const q = (s) => item.querySelector(s);
+  const cs = (e) => getComputedStyle(e);
+  const strong = q('strong');
+  if (!strong || +cs(strong).fontWeight < 700) problems.push('[md] strong is not bold');
+  const em = q('em');
+  if (!em || cs(em).fontStyle !== 'italic') problems.push('[md] em is not italic');
+  const ul = q('ul');
+  if (!ul || cs(ul).listStyleType === 'none' || parseFloat(cs(ul).paddingLeft) < 16) problems.push('[md] ul has no bullets or no indent');
+  const nested = q('ul ul');
+  if (!nested) problems.push('[md] no nested ul');
+  else {
+    const outerLi = ul.querySelector(':scope > li');
+    if (nested.querySelector('li').getBoundingClientRect().left < outerLi.getBoundingClientRect().left + 8) problems.push('[md] nested list is not indented deeper');
+  }
+  const ol = q('ol');
+  if (!ol || cs(ol).listStyleType !== 'decimal' || parseFloat(cs(ol).paddingLeft) < 16) problems.push('[md] ol has no numbers or no indent');
+  const bq = q('blockquote');
+  if (!bq || parseFloat(cs(bq).borderLeftWidth) < 2 || parseFloat(cs(bq).paddingLeft) < 12) problems.push('[md] blockquote has no left rule');
+  const mono = /mono|courier|consolas/i;
+  const code = [...item.querySelectorAll('code')].find((c) => !c.closest('pre'));
+  if (!code || !mono.test(cs(code).fontFamily)) problems.push('[md] inline code is not monospace');
+  const pre = q('pre');
+  if (!pre || !mono.test(cs(pre).fontFamily)) problems.push('[md] code block is not monospace');
+  else {
+    const ox = cs(pre).overflowX;
+    if (ox !== 'auto' && ox !== 'scroll') problems.push('[md] code block overflow-x is ' + ox);
+    if (pre.scrollWidth > pre.clientWidth + 1 && pre.getBoundingClientRect().width > item.clientWidth + 0.5) problems.push('[md] code block is wider than the text box');
+  }
+  const cm = document.querySelector('.ContentManager');
+  if (cm && cm.scrollWidth > cm.clientWidth + 1) problems.push('[md] text box scrolls sideways');
+  const hr = q('hr');
+  if (!hr || hr.getBoundingClientRect().width < 60 || parseFloat(cs(hr).borderTopWidth) < 1 || cs(hr).borderTopStyle === 'none') problems.push('[md] hr rule is missing or invisible');
+  return { problems };
+})()`;
+
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+const fence = "\`\`\`";
+const mdBody = [
+  "Intro with **bold**, *italic*, \`code\` and a [link](/effectiveness/).",
+  "",
+  "- first item",
+  "- second item",
+  "  - nested item",
+  "",
+  "1. one",
+  "2. two",
+  "",
+  "> A quoted line.",
+  "",
+  "---",
+  "",
+  fence + "js",
+  'const longLine = "' + "x".repeat(120) + '";',
+  fence,
+].join("\n");
+
 const sandbox = makeSandbox();
+const db = new DatabaseSync(path.join(sandbox, "content/blog.db"));
+const mdSlug = db.prepare("SELECT slug FROM pages WHERE position IS NOT NULL ORDER BY position LIMIT 1").get().slug;
+db.prepare("UPDATE pages SET body = ? WHERE slug = ?").run(mdBody, mdSlug);
+db.close();
 const profile = fs.mkdtempSync(path.join(os.tmpdir(), "carbyne-chrome-"));
 let server, chrome, ws;
 let bad = 0;
@@ -160,9 +225,9 @@ try {
   };
 
   /** Opens the home page at a screen size; true once the scene has mounted. */
-  const open = async (w, h) => {
+  const open = async (w, h, pathname = "/x/") => {
     await send("Emulation.setDeviceMetricsOverride", { width: w, height: h, deviceScaleFactor: 1, mobile: false });
-    await send("Page.navigate", { url: `http://127.0.0.1:${port}/x/` });
+    await send("Page.navigate", { url: `http://127.0.0.1:${port}${pathname}` });
     for (let i = 0; i < 100; i++) {
       await sleep(50);
       if (await evaluate("document.documentElement.classList.contains('has-scene')").catch(() => false)) return true;
@@ -229,6 +294,14 @@ try {
       console.log(paused === 1 ? `ok  hover: 1 of ${states.length} labels paused` : `NO  hover: ${paused} of ${states.length} labels paused, want 1 (pointer at ${Math.round(spot.x)},${Math.round(spot.y)} is over ${hit})`);
       if (paused !== 1) bad++;
     }
+  }
+
+  // Markdown: the rich body on the first river page must be styled and not scroll the page sideways.
+  for (const [w, h] of [[1280, 800], [390, 844]]) {
+    if (!(await open(w, h, `/x/${mdSlug}/`))) { console.log(`NO  md ${w}x${h}: scene did not mount`); bad++; continue; }
+    const r = await evaluate(MEASURE_MD);
+    console.log(r.problems.length ? `NO  md ${w}x${h}: ${r.problems.slice(0, 4).join("; ")}` : `ok  md ${w}x${h}`);
+    if (r.problems.length) bad++;
   }
 
   // Control: with the star layer hidden the window check must say no.
