@@ -2,7 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { DatabaseSync } from 'node:sqlite';
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
@@ -21,7 +21,7 @@ if (build.status !== 0) {
 }
 
 const db = new DatabaseSync(path.join(root, 'content/blog.db'), { readOnly: true });
-const rows = db.prepare('SELECT slug, title, position FROM pages').all();
+const rows = db.prepare('SELECT slug, label, title, accent, position FROM pages').all();
 db.close();
 const river = rows.filter((r) => r.position !== null).sort((a, b) => a.position - b.position);
 
@@ -91,6 +91,52 @@ const expectedRiver = river.map((r) => `${BASE}/${r.slug}/`);
   const welcome = rows.find((r) => r.position === null);
   if (welcome && !(pages.get('/') ?? '').includes(`<h1>${esc(welcome.title)}</h1>`)) problems.push('/');
   checks.push(['titles', problems]);
+}
+
+{
+  const problems = [];
+  const { renderScene } = await import(pathToFileURL(path.join(root, 'src/scene/index.mjs')).href);
+  const items = river.map((r) => ({ label: r.label, color: r.accent, href: `${BASE}/${r.slug}/` }));
+  items.push({ label: 'A&B "x"', color: 'red', href: `${BASE}/a&b/` });
+  const svg = renderScene(1280, 800, '', { items, active: items[1].label, home: `${BASE}/` });
+  const count = (s) => svg.split(s).length - 1;
+  if (count(`<a href="${BASE}/">`) !== 1) problems.push(`moon link count ${count(`<a href="${BASE}/">`)}`);
+  let last = -1;
+  for (const r of river) {
+    const needle = `<a href="${BASE}/${r.slug}/">`;
+    const at = svg.indexOf(needle);
+    if (count(needle) !== 1) problems.push(`${r.slug} link count ${count(needle)}`);
+    else if (at < last) problems.push(`${r.slug} link out of order`);
+    last = at;
+  }
+  if (!svg.includes('A&amp;B') || !svg.includes('&quot;x&quot;')) problems.push('label not escaped');
+  if (!svg.includes(`href="${BASE}/a&amp;b/"`)) problems.push('href not escaped');
+  const links = count('<a href=');
+  if (links !== items.length + 1) problems.push(`${links} links, want ${items.length + 1}`);
+  checks.push(['scene links', problems]);
+}
+
+{
+  const problems = [];
+  for (const [url, html] of pages) {
+    const sceneTag = html.match(/<div id="scene"[^>]*>/)?.[0] ?? '';
+    if (!sceneTag.includes(`data-home="${BASE}/"`)) problems.push(`${url}: data-home`);
+    const nav = html.split('<nav class="river"')[1]?.split('</nav>')[0] ?? '';
+    const links = [...nav.matchAll(/<a href="([^"]*)" data-color="([^"]*)"([^>]*)>/g)];
+    if (links.length !== river.length) { problems.push(`${url}: ${links.length} nav links`); continue; }
+    const own = url === '/' ? null : url.slice(1, -1);
+    let current = 0;
+    links.forEach((m, i) => {
+      if (m[1] !== expectedRiver[i]) problems.push(`${url}: link ${i} href ${m[1]}`);
+      if (m[2] !== esc(river[i].accent)) problems.push(`${url}: link ${i} data-color ${m[2]}`);
+      if (m[3].includes('aria-current="page"')) {
+        current++;
+        if (river[i].slug !== own) problems.push(`${url}: aria-current on ${river[i].slug}`);
+      }
+    });
+    if (current !== (own ? 1 : 0)) problems.push(`${url}: ${current} aria-current`);
+  }
+  checks.push(['page hooks', problems]);
 }
 
 let failed = 0;
