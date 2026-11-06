@@ -37,8 +37,8 @@ export default function BGanimStarDots(w, h, accent) {
   const group = (name, dur, tile) =>
     `<g data-depth="${name}"><animateTransform attributeName="transform" attributeType="XML" type="translate" from="0 0" to="${r2(-TILE)} 0" dur="${dur}s" repeatCount="indefinite"></animateTransform>${tile}${tile.replace(/cx="([\d.]+)"/g, (m, v) => `cx="${r2(Number(v) + TILE)}"`)}</g>`;
 
-  const far = group("far", 90, stars(11, 36, 0.6, 1.0, "#fff", [0.5, 0.7]));
-  const mid = group("mid", 50, stars(22, 18, 1.1, 1.6, "#dfe8ff", [0.7, 0.9]));
+  const far = group("far", 90, stars(11, 64, 0.6, 1.0, "#fff", [0.5, 0.7]));
+  const mid = group("mid", 50, stars(22, 28, 1.1, 1.6, "#dfe8ff", [0.7, 0.9]));
   const near = group("near", 28, stars(33, 7, 1.8, 2.4, ["#fff", "#ffe9c4"], [0.95, 1], true));
 
   return `<svg xmlns="http://www.w3.org/2000/svg" class="BGanimStarDots SVG" height="${h}" width="${w}"><svg x="0" y="${h * 0.6}" width="${TILE}" height="${H}"><defs><linearGradient id="CaveSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#00001a"></stop><stop offset="1" stop-color="#000036"></stop></linearGradient></defs><rect width="100%" height="100%" fill="url(#CaveSky)"></rect>${far}${mid}${near}</svg></svg>`;
