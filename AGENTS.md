@@ -18,7 +18,8 @@ Owner checks: D5 adds a page with an image through the admin, pushes, sees it li
 - Art = pure functions `(w, h, accent) -> SVG markup string`, ported verbatim from the old repo's `SVG.js` layers. One resize listener for the whole scene. No `viewBox` scaling: a non-uniform one would stretch circles and text.
 - Page text is static HTML and readable without JS. Every river item is a real `<a href>` in the HTML.
 - One table `pages` (slug, label, title, body, accent, position). Body is Markdown. `/` is the Welcome page, reached from the moon, not part of the river.
-- SQLite file `content/blog.db`, read with `node:sqlite`. The only dependency allowed is `marked`.
+- A page is in the river iff `position` is not NULL (unique, shown in ascending order). The Welcome page has slug `welcome`, no position, and is built to `/`; every river page is built to `/<slug>/`. Markdown bodies use root-relative URLs (`/img/x.png`, `/music/`); the build prefixes `BASE_PATH`.
+- SQLite file `content/blog.db`, read with `node:sqlite`. No npm dependencies. The one third-party file is `marked` (Markdown), vendored as `src/vendor/marked.mjs`; upgrade by replacing that file.
 - Admin is local only (127.0.0.1), no login, no secrets. It rejects any request whose Origin or Host is not itself.
 - Plain ESM JavaScript with JSDoc. No TypeScript, no framework. Fonts are woff2 only.
 - Hosting: GitHub Pages, deployed by a GitHub Actions workflow that runs `node src/build.mjs`.
@@ -34,8 +35,8 @@ Owner checks: D5 adds a page with an image through the admin, pushes, sees it li
 
 ## Homes (one home per file)
 
-`README.md`, `AGENTS.md`, `CLAUDE.md`, `package.json`, `.gitignore`, `.github/workflows/pages.yml`, `src/build.mjs`, `src/scene/`, `src/admin/`, `content/blog.db`, `public/` (fonts, images, css; copied as is into `dist/`), `proofs/`, `dist/` (ignored), `_project/working-memory/` (ignored task files).
+`README.md`, `AGENTS.md`, `CLAUDE.md`, `package.json`, `.gitignore`, `.github/workflows/pages.yml`, `src/build.mjs`, `src/scene/`, `src/vendor/`, `src/admin/`, `content/blog.db`, `public/` (fonts, images, css; copied as is into `dist/`), `proofs/`, `dist/` (ignored), `_project/working-memory/` (ignored task files).
 
 ## Check per PR
 
-PR 1 and 2: none. PR 3 onward: the proof the PR turns green (`node proofs/d1-art.mjs`, then d2, d3, d4).
+Runner check: `node proofs/d1-art.mjs --selftest`. The proof a PR turns green is run by the orchestrator after the runner has landed the tasks.
