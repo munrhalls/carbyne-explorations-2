@@ -33,10 +33,10 @@ export const layers = {
   BGNavigationalRiverButtons,
 };
 
-/** Whole scene in old drawing order and nesting, as one markup string; `opts` = { starsUrl, items, active, home, phase }. */
+/** Whole scene in old drawing order and nesting, as one markup string; `opts` = { items, active, home, phase }. */
 export function renderScene(w, h, accent, opts = {}) {
   return (
-    BGanimStarDots(w, h, accent, opts.starsUrl) +
+    BGanimStarDots(w, h, accent) +
     BGblanket(w, h, accent) +
     BGCaveLine(w, h, accent) +
     BGClepsidreBridgeway(w, h, accent) +

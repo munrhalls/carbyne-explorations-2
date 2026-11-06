@@ -170,11 +170,39 @@ try {
     return false;
   };
 
+  /** Pixel check: the cave window at (0.15w, 0.85h) is dark navy and the box around it holds near-white star pixels. */
+  const windowProblems = async (w, h) => {
+    const shot = await send("Page.captureScreenshot", { format: "png" });
+    const r = await evaluate(`(async () => {
+      const img = new Image();
+      img.src = "data:image/png;base64,${shot.data}";
+      await img.decode();
+      const c = document.createElement("canvas");
+      c.width = img.width; c.height = img.height;
+      const ctx = c.getContext("2d", { willReadFrequently: true });
+      ctx.drawImage(img, 0, 0);
+      const cx = Math.round(${w} * 0.15), cy = Math.round(${h} * 0.85);
+      const block = ctx.getImageData(cx - 4, cy - 4, 9, 9).data;
+      const chan = (o) => { const v = []; for (let i = o; i < block.length; i += 4) v.push(block[i]); v.sort((a, b) => a - b); return v[Math.floor(v.length / 2)]; };
+      const [mr, mg, mb] = [chan(0), chan(1), chan(2)];
+      const x0 = Math.round(${w} * 0.12), x1 = Math.round(${w} * 0.19);
+      const y0 = Math.round(${h} * 0.70), y1 = Math.round(${h} * 0.95);
+      const box = ctx.getImageData(x0, y0, x1 - x0, y1 - y0).data;
+      let stars = 0;
+      for (let i = 0; i < box.length; i += 4) if (box[i] >= 150 && box[i + 1] >= 150 && box[i + 2] >= 150) stars++;
+      return { mr, mg, mb, stars };
+    })()`);
+    const problems = [];
+    if (!(r.mr <= 16 && r.mg <= 16 && r.mb >= 20 && r.mb <= 90)) problems.push(`[window] median rgb(${r.mr},${r.mg},${r.mb}) is not dark navy`);
+    if (r.stars < 3) problems.push(`[stars] only ${r.stars} near-white pixels, want 3`);
+    return problems;
+  };
+
   for (const [w, h] of SIZES) {
     if (!(await open(w, h))) { console.log(`NO  ${w}x${h}: scene did not mount`); bad++; continue; }
     const r = await evaluate(MEASURE);
     const t = await evaluate(MEASURE_TEXT);
-    const problems = [...new Set([...r.problems, ...t.problems])];
+    const problems = [...new Set([...r.problems, ...t.problems, ...(await windowProblems(w, h))])];
     if (r.minFont < MIN_LABEL_PX) problems.push(`label font ${r.minFont}px < ${MIN_LABEL_PX}px`);
     console.log(problems.length ? `NO  ${w}x${h}: ${problems.slice(0, 8).join("; ")}` : `ok  ${w}x${h}: ${r.labels} labels inside, font ${r.minFont}px`);
     if (problems.length) bad++;
@@ -201,6 +229,15 @@ try {
       console.log(paused === 1 ? `ok  hover: 1 of ${states.length} labels paused` : `NO  hover: ${paused} of ${states.length} labels paused, want 1 (pointer at ${Math.round(spot.x)},${Math.round(spot.y)} is over ${hit})`);
       if (paused !== 1) bad++;
     }
+  }
+
+  // Control: with the star layer hidden the window check must say no.
+  if (!(await open(1280, 800))) { console.log("NO  control: scene did not mount"); bad++; }
+  else {
+    await evaluate("document.querySelector('#scene > svg').style.display = 'none'");
+    const cp = await windowProblems(1280, 800);
+    console.log(cp.length ? "ok  control: hiding the star layer makes the window check say no" : "NO  control: window check still passes with the star layer hidden");
+    if (!cp.length) bad++;
   }
 } catch (e) {
   console.log(`D9: no - ${e.message}`);
