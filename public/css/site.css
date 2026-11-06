@@ -1,0 +1,268 @@
+/* Reset */
+/* http://meyerweb.com/eric/tools/css/reset/ 
+   v2.0 | 20110126
+   License: none (public domain)
+*/
+
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed, 
+figure, figcaption, footer, header, hgroup, 
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	font-size: 100%;
+	font: inherit;
+	vertical-align: baseline;
+}
+/* HTML5 display-role reset for older browsers */
+article, aside, details, figcaption, figure, 
+footer, header, hgroup, menu, nav, section {
+	display: block;
+}
+body {
+	line-height: 1;
+}
+ol, ul {
+	list-style: none;
+}
+blockquote, q {
+	quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+	content: '';
+	content: none;
+}
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+/* Box sizing */
+* { box-sizing: border-box; }
+
+/* App */
+.App {
+  font-family: 'Josefin Sans', sans-serif;
+  position: relative;
+  overflow-y: hidden;
+}
+@media screen and (max-width: 600px) {
+  html, body, .App {
+    font-size: 8px;
+  }
+}
+
+/* SVG */
+.SVG {
+  /* z-precedence */
+  z-index: 1;
+  /* pos */
+  position: absolute;
+}
+/* BGblanket */
+.BGblanket {
+    
+}
+/* BGCaveLine */
+.BGCaveLine {
+    
+}
+/* BGCaveSteps */
+.BGCaveSteps {
+}
+/* BGCaveDots */
+.BGCaveDots {
+    position: absolute;
+
+}
+
+.BGCaveDots__dot {
+    position: absolute;
+    top: 50%;
+}
+
+/* BGanimStarDots */
+#IMG__STARS {
+    
+}
+
+.BGanimStarDots__path {
+    height: 100%;
+}
+
+/* BGCaveLineFill */
+.BGCaveLineFill {
+    
+}
+/* BGCircle */
+.BGCircle circle {
+    cursor: pointer;    
+}
+
+.BGCircle circle:hover {
+    fill: #000;
+}
+/* BGblanketOutline */
+.BGblanketOutline {
+    
+}
+/* BGcontentContainer */
+.BGcontentContainer {
+    /* z-precedence */
+    z-index: 0;
+    /* pos */
+    position: absolute;
+    /* box */
+    height: 100%;
+    width: 100%;
+    background: #fff;
+}
+/* AppTitle */
+.AppTitle {
+    font-size: 1.25rem;
+    letter-spacing: 3px;
+    position: absolute;
+    z-index: 9;
+}
+
+.AppTitle__textOne {
+    font-size: 1rem;
+    letter-spacing: 1px;
+    font-weight: bold;
+    text-transform: uppercase;
+    text-shadow: 1px 1px #fff;
+}
+
+.AppTitle__textTwo {
+    letter-spacing: 1.1rem;
+    font-weight: bold;
+    font-size: 1.25rem;
+    color: #000;
+    text-transform: uppercase;
+    text-shadow: 1px 1px #111;
+}
+
+@media screen and (max-width: 900px) {
+    .AppTitle {
+        font-size: .75rem;    
+    }
+    .AppTitle__textOne {
+        font-size: .6rem;
+        letter-spacing: 2px;
+    }
+    .AppTitle__textTwo {
+        font-size: .75rem;
+        letter-spacing: 1.025rem;
+    }
+}
+
+@media screen and (max-width: 600px) {
+    .AppTitle {
+        font-size: .75rem;    
+    }
+    .AppTitle__textOne {
+        font-size: .5rem;
+        letter-spacing: 2px;
+    }
+    .AppTitle__textTwo {
+        font-size: .4rem;
+        letter-spacing: 1.025rem;
+    }
+  }
+
+  @media screen and (max-width: 325px) {
+    .AppTitle {
+        font-size: .5rem;   
+        letter-spacing: 1.05rem; 
+    }
+    .AppTitle__textOne {
+        letter-spacing: normal; 
+        font-size: .33rem;
+    }
+  }
+/* BGNavigationalRiver */
+.BGNavigationalRiver {
+    display: flex;
+    justify-content: space-between;
+    align-items: stretch;
+}
+
+/* BGNavigationalRiverButton */
+.BGNavigationalRiverButton {
+    font-size: 1rem;
+    color: #fff;
+    
+    cursor: pointer;
+    border: 1px solid #fff;
+    z-index: 9;
+    
+}
+.BGNavigationalRiverButton__text_textPath {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.BGNavigationalRiverButton__text:hover {
+    filter: drop-shadow(0px 12px 12px rgba(255, 255, 255, 1));
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1.75rem;
+}
+
+.BGNavigationalRiverButton__text_textPath2 {
+    font-size: 2rem;
+    font-weight: bold;
+}
+
+.BGNavigationalRiverButton__text:hover .BGNavigationalRiverButton__text_textPath2 {
+    filter: drop-shadow(0px 12px 12px rgba(255, 255, 255, 1));
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 2.75rem;
+}
+.BGNavigationalRiverButton__text {
+}
+
+.BGNavigationalRiverButton__text__tspan {
+    border: 1px solid #fff;
+}
+
+/* Josefin Sans fonts */
+@font-face {
+  font-family: 'Josefin Sans';
+  font-display: swap;
+  src: url("../fonts/JosefinSans.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Josefin Sans';
+  font-display: swap;
+  src: url("../fonts/JosefinSans-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Josefin Sans';
+  font-display: swap;
+  src: url("../fonts/JosefinSans-Italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+}
+@font-face {
+  font-family: 'Josefin Sans';
+  font-display: swap;
+  src: url("../fonts/JosefinSans-BoldItalic.woff2") format("woff2");
+  font-weight: 700;
+  font-style: italic;
+}
