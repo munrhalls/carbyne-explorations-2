@@ -319,8 +319,17 @@ try {
       const r = el.getBoundingClientRect();
       let visible = r.width > 1 && r.height > 1 && r.left >= 0 && r.top >= 0 && r.right <= innerWidth && r.bottom <= innerHeight;
       if (kind === 'label') visible = visible && +getComputedStyle(el.querySelector('.RiverLabel') || el).opacity >= 0.99;
+      const style = kind === 'nav' ? getComputedStyle(el) : null;
       if (kind === 'nav') visible = visible && getComputedStyle(nav).clipPath === 'none';
-      return { id: (el.getAttribute('href') || '') + '#' + links.indexOf(el), kind, text: el.textContent.trim(), visible };
+      return {
+        id: (el.getAttribute('href') || '') + '#' + links.indexOf(el),
+        kind, text: el.textContent.trim(), visible,
+        fontFamily: style && style.fontFamily,
+        fontSize: style && parseFloat(style.fontSize),
+        textDecorationLine: style && style.textDecorationLine,
+        fontWeight: style && +style.fontWeight,
+        current: kind === 'nav' && el.getAttribute('aria-current') === 'page',
+      };
     })()`;
     const stops = new Map();
     const order = [];
@@ -338,6 +347,12 @@ try {
     for (const d of order) {
       if (d.kind === "label") problems.push(`[tab] focus lands on river label "${d.text}"`);
       else if (!d.visible) problems.push(`[tab] "${d.text}" has focus but is not visible`);
+      if (d.kind === "nav") {
+        if (!/josefin/i.test(d.fontFamily)) problems.push(`[tab-style] "${d.text}" font is ${d.fontFamily}`);
+        if (!(d.fontSize >= 14)) problems.push(`[tab-style] "${d.text}" is ${d.fontSize}px`);
+        if (d.textDecorationLine !== "none") problems.push(`[tab-style] "${d.text}" is underlined`);
+        if (d.current && !(d.fontWeight >= 700)) problems.push("[tab-style] current page not bold");
+      }
     }
     const expected = await evaluate("document.querySelectorAll('a[href]:not([tabindex=\"-1\"])').length");
     if (stops.size !== expected) problems.push(`[tab] ${stops.size} stops for ${expected} tabbable links`);
