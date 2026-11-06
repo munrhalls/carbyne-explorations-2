@@ -304,6 +304,62 @@ try {
     if (r.problems.length) bad++;
   }
 
+  // Tab: on a river page, focus must never land on a drifting label and every focused element must be on screen.
+  if (!(await open(1280, 800, `/x/${mdSlug}/`))) { console.log("NO  tab: scene did not mount"); bad++; }
+  else {
+    await send("Page.bringToFront");
+    const DESCRIBE = `(() => {
+      const el = document.activeElement;
+      if (!el || el === document.body) return null;
+      const links = [...document.querySelectorAll('a[href]')];
+      const nav = document.querySelector('nav.river');
+      const kind = el.querySelector('.RiverLabel') || el.classList.contains('RiverLabel') ? 'label'
+        : nav && nav.contains(el) ? 'nav'
+        : el.closest('.BGCircle') ? 'moon' : 'content';
+      const r = el.getBoundingClientRect();
+      let visible = r.width > 1 && r.height > 1 && r.left >= 0 && r.top >= 0 && r.right <= innerWidth && r.bottom <= innerHeight;
+      if (kind === 'label') visible = visible && +getComputedStyle(el.querySelector('.RiverLabel') || el).opacity >= 0.99;
+      const style = kind === 'nav' ? getComputedStyle(el) : null;
+      if (kind === 'nav') visible = visible && getComputedStyle(nav).clipPath === 'none';
+      return {
+        id: (el.getAttribute('href') || '') + '#' + links.indexOf(el),
+        kind, text: el.textContent.trim(), visible,
+        fontFamily: style && style.fontFamily,
+        fontSize: style && parseFloat(style.fontSize),
+        textDecorationLine: style && style.textDecorationLine,
+        fontWeight: style && +style.fontWeight,
+        current: kind === 'nav' && el.getAttribute('aria-current') === 'page',
+      };
+    })()`;
+    const stops = new Map();
+    const order = [];
+    for (let i = 0; i < 16; i++) {
+      for (const type of ["keyDown", "keyUp"])
+        await send("Input.dispatchKeyEvent", { type, key: "Tab", code: "Tab", windowsVirtualKeyCode: 9 });
+      await sleep(80);
+      const d = await evaluate(DESCRIBE);
+      if (!d) continue;
+      if (stops.has(d.id)) break;
+      stops.set(d.id, d);
+      order.push(d);
+    }
+    const problems = [];
+    for (const d of order) {
+      if (d.kind === "label") problems.push(`[tab] focus lands on river label "${d.text}"`);
+      else if (!d.visible) problems.push(`[tab] "${d.text}" has focus but is not visible`);
+      if (d.kind === "nav") {
+        if (!/josefin/i.test(d.fontFamily)) problems.push(`[tab-style] "${d.text}" font is ${d.fontFamily}`);
+        if (!(d.fontSize >= 14)) problems.push(`[tab-style] "${d.text}" is ${d.fontSize}px`);
+        if (d.textDecorationLine !== "none") problems.push(`[tab-style] "${d.text}" is underlined`);
+        if (d.current && !(d.fontWeight >= 700)) problems.push("[tab-style] current page not bold");
+      }
+    }
+    const expected = await evaluate("document.querySelectorAll('a[href]:not([tabindex=\"-1\"])').length");
+    if (stops.size !== expected) problems.push(`[tab] ${stops.size} stops for ${expected} tabbable links`);
+    console.log(problems.length ? `NO  tab: ${problems.slice(0, 4).join("; ")}` : "ok  tab");
+    if (problems.length) bad++;
+  }
+
   // Control: with the star layer hidden the window check must say no.
   if (!(await open(1280, 800))) { console.log("NO  control: scene did not mount"); bad++; }
   else {

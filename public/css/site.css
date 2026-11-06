@@ -206,13 +206,11 @@ table {
     font-weight: 700;
 }
 
-a:hover .RiverLabel,
-a:focus-visible .RiverLabel {
+a:hover .RiverLabel {
     animation-play-state: paused;
 }
 
-a:hover .RiverLabel text,
-a:focus-visible .RiverLabel text {
+a:hover .RiverLabel text {
     text-decoration: underline;
     text-decoration-color: var(--c);
     text-decoration-thickness: 2px;
@@ -396,7 +394,8 @@ a:focus-visible .RiverLabel text {
     background: #f1f2f8;
     border-radius: 3px;
     overflow-x: auto;
-    white-space: pre;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 .Category__item pre code {
@@ -417,13 +416,30 @@ nav.river {
   top: 0;
   left: 0;
   z-index: 9;
-  padding: 0.5rem;
-  background: rgba(0, 0, 0, 0.6);
+  padding: 0.75rem 1.25rem;
+  background: rgba(0, 0, 0, 0.88);
+  border-radius: 0 0 8px 0;
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 15px;
+  letter-spacing: 0.05em;
+  line-height: 1.7;
 }
 
 nav.river a {
   display: block;
   color: #fff;
+  text-decoration: none;
+  padding: 0 0.25rem;
+}
+
+nav.river a[aria-current="page"] {
+  font-weight: 700;
+}
+
+nav.river a:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 /* scene links */
@@ -443,7 +459,7 @@ nav.river a {
 .has-scene nav.river:focus-within {
   width: auto;
   height: auto;
-  padding: 0.5rem;
+  padding: 0.75rem 1.25rem;
   overflow: visible;
   clip-path: none;
 }

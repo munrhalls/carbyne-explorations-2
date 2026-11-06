@@ -103,7 +103,7 @@ const expectedRiver = river.map((r) => `${BASE}/${r.slug}/`);
   if (count(`<a href="${BASE}/">`) !== 1) problems.push(`moon link count ${count(`<a href="${BASE}/">`)}`);
   let last = -1;
   for (const r of river) {
-    const needle = `<a href="${BASE}/${r.slug}/">`;
+    const needle = `<a href="${BASE}/${r.slug}/" tabindex="-1">`;
     const at = svg.indexOf(needle);
     if (count(needle) !== 1) problems.push(`${r.slug} link count ${count(needle)}`);
     else if (at < last) problems.push(`${r.slug} link out of order`);
