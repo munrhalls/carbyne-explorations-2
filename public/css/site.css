@@ -206,13 +206,11 @@ table {
     font-weight: 700;
 }
 
-a:hover .RiverLabel,
-a:focus-visible .RiverLabel {
+a:hover .RiverLabel {
     animation-play-state: paused;
 }
 
-a:hover .RiverLabel text,
-a:focus-visible .RiverLabel text {
+a:hover .RiverLabel text {
     text-decoration: underline;
     text-decoration-color: var(--c);
     text-decoration-thickness: 2px;
@@ -396,7 +394,8 @@ a:focus-visible .RiverLabel text {
     background: #f1f2f8;
     border-radius: 3px;
     overflow-x: auto;
-    white-space: pre;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 .Category__item pre code {

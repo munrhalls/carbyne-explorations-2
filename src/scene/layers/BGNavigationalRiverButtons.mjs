@@ -1,4 +1,4 @@
-/** River menu labels: one link per item, each drifting along the river and pausing on hover or focus. `active` bolds the current page's label; `phase` (seconds) keeps the drift continuous across redraws. */
+/** River menu labels: one link per item, each drifting along the river and pausing on hover. `active` bolds the current page's label; `phase` (seconds) keeps the drift continuous across redraws. */
 import { esc } from "../esc.mjs";
 
 const PERIOD = 140; // seconds for one lap of the river
@@ -41,7 +41,7 @@ export default function BGNavigationalRiverButtons(
       const cls = item.label === active ? "RiverLabel RiverLabel--active" : "RiverLabel";
       const label = `<g class="${cls}" style="${style}"><circle r="3.5"></circle><text x="12" y="5">${esc(item.label)}</text></g>`;
       return typeof item.href === "string" && item.href !== ""
-        ? `<a href="${esc(item.href)}">${label}</a>`
+        ? `<a href="${esc(item.href)}" tabindex="-1">${label}</a>`
         : label;
     })
     .join("");
