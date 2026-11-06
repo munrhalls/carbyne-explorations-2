@@ -355,3 +355,25 @@ nav.river a {
   display: block;
   color: #fff;
 }
+
+/* scene links */
+#scene a {
+  text-decoration: none;
+}
+
+.has-scene nav.river {
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.has-scene nav.river:focus-within {
+  width: auto;
+  height: auto;
+  padding: 0.5rem;
+  overflow: visible;
+  clip-path: none;
+}
