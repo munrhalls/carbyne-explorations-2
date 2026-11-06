@@ -106,9 +106,9 @@ async function main() {
     console.log("D1: no - src/scene/index.mjs is missing");
     process.exit(1);
   }
-  let layers;
+  let layers, renderScene;
   try {
-    ({ layers } = await import(pathToFileURL(scenePath).href));
+    ({ layers, renderScene } = await import(pathToFileURL(scenePath).href));
   } catch (e) {
     console.log(`D1: no - ${e.message}`);
     process.exit(1);
@@ -138,6 +138,25 @@ async function main() {
       }
     }
     console.log(firstDiff ? `NO  ${layer.name} ${firstDiff}` : `ok  ${layer.name}`);
+  }
+  if (typeof renderScene !== "function") {
+    bad += fixture.sizes.length;
+    total += fixture.sizes.length;
+    console.log("NO  scene: renderScene is not exported");
+  } else {
+    let sceneBad = 0;
+    for (const { w, h } of fixture.sizes) {
+      total++;
+      const key = `${w}x${h}`;
+      const out = renderScene(w, h, fixture.accent);
+      const diff = typeof out === "string" ? same(fixture.scene[key], out) : "result not a string";
+      if (diff !== null) {
+        bad++;
+        sceneBad++;
+        console.log(`NO  scene ${key}: ${diff}`);
+      }
+    }
+    if (!sceneBad) console.log("ok  scene");
   }
   console.log(bad ? `D1: no - ${bad} of ${total} layer-sizes differ` : "D1: yes");
   process.exit(bad ? 1 : 0);
