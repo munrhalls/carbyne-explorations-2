@@ -67,41 +67,12 @@ table {
   /* pos */
   position: absolute;
 }
-/* BGblanket */
-.BGblanket {
-    
-}
-/* BGCaveLine */
-.BGCaveLine {
-    
-}
-/* BGCaveSteps */
-.BGCaveSteps {
-}
 /* BGCaveDots */
 .BGCaveDots {
     position: absolute;
 
 }
 
-.BGCaveDots__dot {
-    position: absolute;
-    top: 50%;
-}
-
-/* BGanimStarDots */
-#IMG__STARS {
-    
-}
-
-.BGanimStarDots__path {
-    height: 100%;
-}
-
-/* BGCaveLineFill */
-.BGCaveLineFill {
-    
-}
 /* BGCircle */
 .BGCircle circle {
     cursor: pointer;    
@@ -109,10 +80,6 @@ table {
 
 .BGCircle circle:hover {
     fill: #000;
-}
-/* BGblanketOutline */
-.BGblanketOutline {
-    
 }
 /* BGcontentContainer */
 .BGcontentContainer {
