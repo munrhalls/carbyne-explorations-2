@@ -64,6 +64,13 @@ const MEASURE_TEXT = `(async () => {
   for (const text of texts) {
     const fs = parseFloat(getComputedStyle(text).fontSize);
     if (fs < ${MIN_RIBBON_PX}) problems.push('[ribbon] font ' + fs + 'px < ' + ${MIN_RIBBON_PX} + 'px: ' + text.textContent);
+    const m = document.querySelector('.BGCircle circle').getBoundingClientRect();
+    const cx = m.left + m.width / 2, cy = m.top + m.height / 2, r = m.width / 2;
+    const p = text.getStartPositionOfChar(0);
+    const left = p.x - 2, right = p.x + fs, top = p.y - fs, bottom = p.y + fs;
+    const nx = Math.max(left, Math.min(cx, right)), ny = Math.max(top, Math.min(cy, bottom));
+    const d = Math.hypot(cx - nx, cy - ny);
+    if (d < r + 5) problems.push('[moon] "' + text.textContent + '" starts ' + Math.round(d) + 'px from the moon centre, want ' + Math.round(r + 5));
     const tp = text.querySelector('textPath');
     if (tp) {
       const path = document.getElementById(tp.href.baseVal.slice(1));
