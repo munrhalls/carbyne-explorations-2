@@ -84,6 +84,23 @@ const MEASURE_TEXT = `(async () => {
   if (item && getComputedStyle(item).borderRightWidth !== '0px') problems.push('[bar] right border ' + getComputedStyle(item).borderRightWidth);
   const cm = document.querySelector('.ContentManager');
   if (cm && (cm.scrollWidth > cm.clientWidth || cm.getBoundingClientRect().right > innerWidth + 0.5)) problems.push('[clip] ContentManager clipped: scrollWidth ' + cm.scrollWidth + ', clientWidth ' + cm.clientWidth + ', right ' + Math.round(cm.getBoundingClientRect().right) + ' vs ' + innerWidth);
+  for (const el of document.querySelectorAll('.ContentManager h1, .ContentManager h2, .ContentManager h3, .ContentManager p')) {
+    for (const node of el.childNodes) {
+      if (node.nodeType !== Node.TEXT_NODE) continue;
+      const re = /\\S+/g;
+      let m;
+      while ((m = re.exec(node.textContent))) {
+        const range = document.createRange();
+        range.setStart(node, m.index);
+        range.setEnd(node, m.index + m[0].length);
+        if (range.getClientRects().length > 1) problems.push('[break] "' + m[0] + '" is split over lines');
+      }
+    }
+  }
+  const moon = document.querySelector('.BGCircle');
+  for (const label of document.querySelectorAll('.RiverLabel')) {
+    if (!(label.compareDocumentPosition(moon) & Node.DOCUMENT_POSITION_FOLLOWING)) problems.push('[order] river labels are painted over the moon');
+  }
   return { problems };
 })()`;
 
