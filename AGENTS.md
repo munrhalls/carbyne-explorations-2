@@ -32,7 +32,7 @@ Owner checks: D5 adds a page with an image through the admin, pushes, sees it li
 
 ## Hard limits
 
-- The only commands you may run: `node src/build.mjs` and `node proofs/<file>.mjs`. Never install, lint, type-check, run test frameworks or dev servers, and never contact external sites. A browser runs only inside `proofs/d9-look.mjs` (headless, on the temporary copy) or when the owner asks for one. The proofs D3 and D4 start the admin themselves, on a temporary copy of the repo, and stop it; you never start it by hand.
+- The only commands you may run: `node src/build.mjs`, `node proofs/<file>.mjs` and, inside the design-loop skill only, `node .claude/skills/design-loop/shot.mjs`. Never install, lint, type-check, run test frameworks or dev servers, and never contact external sites. A browser runs only inside `proofs/d9-look.mjs` (headless, on the temporary copy), inside `shot.mjs` (headless, on a throwaway local port) or when the owner asks for one. The proofs D3 and D4 start the admin themselves, on a temporary copy of the repo, and stop it; you never start it by hand.
 - Never add a dependency, folder or root file that is not listed under Homes. If a task needs one, STOP and say so.
 - Executors never commit, push, branch, open or merge PRs. The runner does; the owner merges.
 - Delete files with `git rm`, never `rm`.
@@ -40,7 +40,7 @@ Owner checks: D5 adds a page with an image through the admin, pushes, sees it li
 
 ## Homes (one home per file)
 
-`README.md`, `AGENTS.md`, `CLAUDE.md`, `package.json`, `.gitignore`, `.github/workflows/pages.yml`, `src/build.mjs`, `src/scene/`, `src/vendor/`, `src/admin/`, `content/blog.db`, `public/` (fonts, images, css; copied as is into `dist/`), `proofs/`, `dist/` (ignored), `_project/working-memory/` (ignored task files).
+`README.md`, `AGENTS.md`, `CLAUDE.md`, `package.json`, `.gitignore`, `.github/workflows/pages.yml`, `src/build.mjs`, `src/scene/`, `src/vendor/`, `src/admin/`, `content/blog.db`, `public/` (fonts, images, css; copied as is into `dist/`), `proofs/`, `.claude/skills/design-loop/` (the design-loop skill and its `shot.mjs`), `dist/` (ignored), `_project/working-memory/` (ignored task files).
 
 ## Check per PR
 
