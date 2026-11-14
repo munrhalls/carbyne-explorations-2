@@ -21,6 +21,17 @@ The user's annotation in → site edited → one short reply ending with the can
 
 The user opens the link, finds the render on the canvas, draws and dictates, presses Ctrl+S and says "Done". The canvas holds the 280 x 380 floor only, at 100% zoom (one image px per screen px, exactly what a dev-server tab at that size shows), pinned top-left like a sidebar with the rest of the canvas empty for drawing; check desktop with the eyes command at 1280 x 800. If the tool is broken, say so and expect a pasted screenshot.
 
+## Pre-space (extension before the loop; the loop above stays as is)
+
+Use when the owner asks for pre-space, pre-geometry, slots or ratios, or when a layout keeps needing rounds because numbers are guessed. Goal: settle the space and its ratios first, so the loop only manifests choices inside solved slots.
+
+1. **List slots.** Name each component and its content minimum: moon, title ribbon, river slab and sweep, river labels, text panel, heading, cave. Read `site.css` and `src/scene/` for real values; never measure the hidden accessibility nav or SVG `.RiverLabel` boxes (Chrome reports them at 0,0 because they move along CSS paths).
+2. **Allocate by rigidity.** Rigid first (type: labels at least 12px, body at least 16px, heading glyph width; a shortfall is a bug, no ratio overrides it), then semi-rigid (moon, cave: keep shape, only move), then flexible (the scene is the hero and takes the remainder). Feasibility comes out of the arithmetic.
+3. **Feasibility at 280 x 380.** Check minimums against the floor before drawing. If something cannot fit, name it and let the owner choose what shrinks, moves or goes. Keep the existing concept (e.g. panel edge at 35%, the river as its real diagonal); never replace its shape with plain rectangles.
+4. **Pre-space image.** One stacked image on the canvas, 280 x 760 px at 2x: pre-space map on top, the live floor render below, same x/y. Each component its own colour with a number badge, a legend beside it with size and share of the screen, shared edges as one number, infeasibilities in red. Drifting labels shown at one instant. Build it from a temporary HTML page (must have `<meta name="viewport" content="width=device-width">`, or Chrome lays it out at 980px and shrinks it) served through `shot.mjs`, and delete the temporary page afterwards (`rm` is granted for this). Nothing else in the repo changes.
+5. **Annotate, then freeze.** The owner annotates slots only (edges, sizes, what shrinks). Fix each slot to one rule: fixed px, share of the remainder, or content-sized. Then run the normal loop; edits stay inside a slot. A complaint that needs an edge moved reopens step 4 as an upstream change.
+6. **Taste is not derived.** Say which choices physics does not decide (split, lines shown, balance); do not present them as forced.
+
 ## Project binding (rewrite this block when copying to another repo)
 
 **Eyes.** `node .claude/skills/design-loop/shot.mjs [path=/] [width=280] [height=380] [out.png] [scale=1]` builds the site into `dist/`, serves it on a throwaway local port, renders the page in headless Chrome with device-metrics emulation (the window itself cannot go under ~500px, so the viewport is emulated like DevTools does: width x height, mobile, scale as DPR) and prints the PNG path (default in the system temp dir, never in the repo). Use `/music/` for a river page, `/404.html` for the not-found page. The canvas needs `scale` 2 (it divides the image by 2 to get page px). Run the eyes command before `annotate.sh`; each run rebuilds `dist/`.
