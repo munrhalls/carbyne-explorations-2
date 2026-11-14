@@ -32,7 +32,7 @@ Owner checks: D5 adds a page with an image through the admin, pushes, sees it li
 
 ## Hard limits
 
-- The only commands you may run: `node src/build.mjs`, `node proofs/<file>.mjs` and, inside the design-loop skill only, `node .claude/skills/design-loop/shot.mjs`. Never install, lint, type-check, run test frameworks or dev servers, and never contact external sites. A browser runs only inside `proofs/d9-look.mjs` (headless, on the temporary copy), inside `shot.mjs` (headless, on a throwaway local port) or when the owner asks for one. The proofs D3 and D4 start the admin themselves, on a temporary copy of the repo, and stop it; you never start it by hand.
+- The only commands you may run: `node src/build.mjs`, `node proofs/<file>.mjs` and, inside the design-loop skill only, `node .claude/skills/design-loop/shot.mjs` and `~/work/global/annotate/annotate.sh <png>` (the owner's local annotation canvas, outside the repo, localhost port 4400; it only serves a PNG that `shot.mjs` made). Never install, lint, type-check, run test frameworks or other dev servers, and never contact external sites. A browser runs only inside `proofs/d9-look.mjs` (headless, on the temporary copy), inside `shot.mjs` (headless, on a throwaway local port) or when the owner asks for one. The proofs D3 and D4 start the admin themselves, on a temporary copy of the repo, and stop it; you never start it by hand.
 - Never add a dependency, folder or root file that is not listed under Homes. If a task needs one, STOP and say so.
 - Executors never commit, push, branch, open or merge PRs. The runner does; the owner merges.
 - Delete files with `git rm`, never `rm`.
